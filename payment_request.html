@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="ar" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IL CAZAR — Payment Request</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{--bg:#f7f6f3;--card:#fff;--border:#e2e0da;--border-soft:#ede9e3;--text:#1a1a18;--text-2:#6b6860;--text-3:#a09e99;--accent:#1a1a2e;--gold:#c9a84c;--success-bg:#edf7f0;--success:#2d7a4f;--warn-bg:#fff8ed;--warn:#a06020;--radius:12px;--radius-sm:8px;--shadow:0 1px 3px rgba(0,0,0,.06),0 4px 16px rgba(0,0,0,.06);}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:48px 16px;color:var(--text);}
+.container{width:100%;max-width:540px;}
+.logo{display:flex;align-items:center;gap:10px;margin-bottom:32px;}
+.logo-mark{width:36px;height:36px;background:var(--accent);border-radius:8px;display:flex;align-items:center;justify-content:center;}
+.logo-mark span{color:var(--gold);font-size:11px;font-weight:600;letter-spacing:.04em;line-height:1.2;text-align:center;}
+.logo-text{font-size:14px;font-weight:500;letter-spacing:.02em;}
+.logo-sub{font-size:12px;color:var(--text-3);}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;}
+.card-header{padding:24px 24px 20px;border-bottom:1px solid var(--border-soft);}
+.card-header p{font-size:11px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;}
+.card-header h1{font-size:22px;font-weight:500;}
+.card-body{padding:24px;display:flex;flex-direction:column;gap:18px;}
+.field label{display:block;font-size:12px;font-weight:500;color:var(--text-2);margin-bottom:6px;letter-spacing:.02em;}
+.field label span{font-size:11px;font-weight:500;padding:2px 8px;border-radius:20px;margin-left:6px;}
+.field label span.disc{background:var(--success-bg);color:var(--success);}
+.field label span.prem{background:var(--warn-bg);color:var(--warn);}
+select,input{width:100%;height:42px;padding:0 12px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:14px;color:var(--text);background:var(--card);outline:none;transition:border-color .15s;-webkit-appearance:none;}
+select:focus,input:focus{border-color:var(--accent);}
+select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236b6860' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px;cursor:pointer;}
+select:disabled{opacity:.5;cursor:not-allowed;}
+input[readonly]{background:#f9f8f6;color:var(--text-2);cursor:default;}
+.input-wrap{position:relative;}
+.input-wrap .prefix{position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:13px;color:var(--text-3);pointer-events:none;font-family:'DM Mono',monospace;}
+.input-wrap input{padding-left:28px;font-family:'DM Mono',monospace;font-size:13px;}
+#summary{display:none;background:#f9f8f6;border:1px solid var(--border-soft);border-radius:var(--radius-sm);padding:14px 16px;}
+#summary .sum-title{font-size:11px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;}
+.sum-row{display:flex;justify-content:space-between;align-items:center;font-size:13px;padding:3px 0;}
+.sum-row .k{color:var(--text-2);}
+.sum-row .v{font-weight:500;font-family:'DM Mono',monospace;font-size:12px;}
+.sum-divider{border:none;border-top:1px solid var(--border-soft);margin:6px 0;}
+.btn-primary{width:100%;height:44px;background:var(--accent);color:#fff;border:none;border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer;transition:opacity .15s;display:flex;align-items:center;justify-content:center;gap:8px;}
+.btn-primary:hover{opacity:.88;}
+.btn-primary:disabled{opacity:.5;cursor:not-allowed;}
+.export-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.btn-export{height:40px;border:1px solid var(--border);background:var(--card);color:var(--text);border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;transition:border-color .15s,background .15s;}
+.btn-export:hover{border-color:var(--accent);background:#f9f8f6;}
+.divider-text{display:flex;align-items:center;gap:10px;font-size:11px;color:var(--text-3);}
+.divider-text::before,.divider-text::after{content:'';flex:1;border-top:1px solid var(--border-soft);}
+.stoda-fields{display:none;flex-direction:column;gap:18px;}
+.stoda-fields.show{display:flex;}
+/* Loading state */
+.loading-bar{height:3px;background:var(--border-soft);border-radius:2px;overflow:hidden;margin-bottom:4px;}
+.loading-bar-inner{height:100%;width:30%;background:var(--gold);border-radius:2px;animation:slide 1s infinite;}
+@keyframes slide{0%{transform:translateX(-100%)}100%{transform:translateX(400%)}}
+.status-msg{font-size:12px;color:var(--text-3);text-align:center;padding:8px;}
+.status-msg.error{color:var(--warn);}
+/* PDF Preview */
+#pdf-preview{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:100;overflow-y:auto;padding:20px;}
+#pdf-preview.show{display:flex;align-items:flex-start;justify-content:center;}
+.pdf-preview-inner{background:#fff;width:210mm;min-height:297mm;padding:7mm 8mm;box-shadow:0 8px 40px rgba(0,0,0,.4);}
+.pdf-close-bar{display:flex;gap:10px;margin-bottom:12px;justify-content:flex-end;}
+.pdf-close-bar button{padding:8px 18px;border:none;border-radius:6px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;}
+.btn-print{background:var(--accent);color:#fff;}
+.btn-print:hover{opacity:.88;}
+.btn-close-pdf{background:#f0f0f0;color:var(--text);}
+/* Shared PDF styles */
+.ph-wrap{font-family:Arial,sans-serif;font-size:10px;color:#000;}
+.ph-header{background:#1a1a2e;color:#fff;padding:7px 10px;display:flex;justify-content:space-between;align-items:center;border-bottom:3px solid #c9a84c;}
+.ph-brand{font-size:9px;font-weight:bold;line-height:1.3;}
+.ph-title{font-size:13px;font-weight:bold;}
+.ph-info{border:0.5px solid #999;border-top:none;direction:rtl;}
+.ph-info-row{display:grid;border-bottom:0.5px solid #999;}
+.ph-info-row:last-child{border-bottom:none;}
+.ph-info-row-full{grid-template-columns:1fr;}
+.ph-info-row-3{grid-template-columns:1fr 1fr 1fr;}
+.ph-info-cell{display:flex;align-items:center;gap:6px;padding:4px 7px;border-left:0.5px solid #999;}
+.ph-info-cell:last-child{border-left:none;}
+.ph-info-lbl{font-size:8px;color:#555;white-space:nowrap;font-weight:bold;}
+.ph-info-val{font-size:9px;font-weight:bold;color:#000;flex:1;border-bottom:0.5px solid #ccc;min-height:12px;}
+.ph-table,.ph-sub{width:100%;border-collapse:collapse;font-size:9px;table-layout:fixed;}
+.ph-table th,.ph-sub th{background:#d9d9d9;padding:3px 4px;text-align:center;font-weight:bold;border:0.5px solid #999;}
+.ph-table td,.ph-sub td{padding:2px 4px;border:0.5px solid #ccc;text-align:center;}
+.ph-even td{background:#f8f8f8;}
+.ph-tot td{background:#d9d9d9;font-weight:bold;}
+.ph-yc{background:#f2f2f2;font-weight:bold;vertical-align:middle;}
+.ph-gap{height:5px;}
+.ph-sig{display:flex;justify-content:space-between;padding-top:8px;font-size:10px;font-weight:bold;}
+#print-area{display:none;}
+@media print{
+  @page{size:A4 portrait;margin:7mm 8mm;}
+  body>*{display:none!important;}
+  #print-area{display:block!important;}
+  .ph-header,.ph-table th,.ph-sub th,.ph-even td,.ph-tot td,.ph-yc{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="logo">
+    <div class="logo-mark"><span>IL<br>CAZ</span></div>
+    <div>
+      <div class="logo-text">IL CAZAR</div>
+      <div class="logo-sub">Payment Request</div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-header"><p>New order</p><h1>Order details</h1></div>
+    <div class="card-body">
+      <div id="sheet-status"></div>
+      <div class="field">
+        <label>Project</label>
+        <select id="project" onchange="onProjectChange()" disabled><option value="" disabled selected>Loading...</option></select>
+      </div>
+      <div class="field">
+        <label>Payment type</label>
+        <select id="payment" onchange="onPaymentChange()" disabled><option value="" disabled selected>Select a project first</option></select>
+      </div>
+      <div class="field">
+        <label>System price</label>
+        <div class="input-wrap"><span class="prefix">$</span><input type="number" id="price" placeholder="0.00" min="0" step="0.01" oninput="updatePrices()"/></div>
+      </div>
+      <div class="field">
+        <label>Selling price <span id="badge" style="display:none;"></span></label>
+        <div class="input-wrap"><span class="prefix">$</span><input type="text" id="selling" placeholder="Auto-calculated" readonly/></div>
+      </div>
+      <div class="stoda-fields" id="stoda-extra">
+        <div class="field">
+          <label>Admin fees <span style="font-size:11px;color:var(--text-3);">(0.99% of system price)</span></label>
+          <div class="input-wrap"><span class="prefix">$</span><input type="text" id="admin-val" readonly/></div>
+        </div>
+        <div class="field">
+          <label>Schedule total <span style="font-size:11px;color:var(--text-3);">(Selling − Admin fees)</span></label>
+          <div class="input-wrap"><span class="prefix">$</span><input type="text" id="sched-val" readonly/></div>
+        </div>
+      </div>
+      <div id="summary">
+        <div class="sum-title">Summary</div>
+        <div class="sum-row"><span class="k">Project</span><span class="v" id="s-proj">—</span></div>
+        <div class="sum-row"><span class="k">Payment type</span><span class="v" id="s-type">—</span></div>
+        <div class="sum-row"><span class="k">System price</span><span class="v" id="s-sys">—</span></div>
+        <hr class="sum-divider">
+        <div class="sum-row"><span class="k">Selling price</span><span class="v" id="s-sell">—</span></div>
+        <div class="sum-row" id="s-admin-row" style="display:none;"><span class="k">Admin fees</span><span class="v" id="s-admin">—</span></div>
+        <div class="sum-row" id="s-sched-row" style="display:none;"><span class="k">Schedule total</span><span class="v" id="s-sched">—</span></div>
+      </div>
+      <button class="btn-primary" id="confirm-btn" onclick="handleConfirm()" disabled>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        Confirm order
+      </button>
+      <div class="divider-text">export</div>
+      <div class="export-row">
+        <button class="btn-export" onclick="exportPDF()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+          Export PDF
+        </button>
+        <button class="btn-export" onclick="exportExcel()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/></svg>
+          Export Excel
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="pdf-preview">
+  <div style="width:210mm;">
+    <div class="pdf-close-bar">
+      <button class="btn-close-pdf" onclick="closePdfPreview()">✕ Close</button>
+      <button class="btn-print" onclick="window.print()">🖨 Print / Save PDF</button>
+    </div>
+    <div class="pdf-preview-inner"><div id="pdf-preview-content"></div></div>
+  </div>
+</div>
+<div id="print-area"></div>
+
+<script>
+// ── CONFIG ──
+const SHEET_ID = '1kRm4fxslYSdICl0YLkjF-miWzthlnCBwvMEUDbIVC4A';
+const CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&sheet=Master%20Data`;
+
+let SHEET = [];
+let CR = null;
+
+// ── PARSE % value from string like "8.25%" or "0.0825" ──
+function parsePct(s) {
+  if (!s) return 0;
+  s = s.trim();
+  if (s.endsWith('%')) return parseFloat(s) / 100;
+  return parseFloat(s) || 0;
+}
+
+// ── DETERMINE yearFrom based on project/type ──
+function getYearFrom(project, type) {
+  if (project === 'Stoda' && type === '1 Year') return 'DP-1';
+  if (project === 'Stoda') return 'INS-1';
+  return 'DP-2'; // all others
+}
+
+// ── LOAD SHEET DATA ──
+async function loadSheet() {
+  const statusEl = document.getElementById('sheet-status');
+  statusEl.innerHTML = '<div class="loading-bar"><div class="loading-bar-inner"></div></div><div class="status-msg">Loading data from sheet...</div>';
+
+  try {
+    const res = await fetch(CSV_URL);
+    if (!res.ok) throw new Error('Failed to fetch sheet');
+    const text = await res.text();
+    const rows = text.split('\n').map(r => r.split(','));
+
+    // Find header row
+    const headerIdx = rows.findIndex(r => r[0] === 'Project' && r[1] === 'Type');
+    if (headerIdx === -1) throw new Error('Header not found');
+
+    SHEET = [];
+    for (let i = headerIdx + 1; i < rows.length; i++) {
+      const r = rows[i];
+      if (!r[0] || !r[1] || r[0].trim() === '') break; // stop at empty project
+      const project = r[0].trim();
+      const type    = r[1].trim();
+      if (!project || !type) continue;
+
+      SHEET.push({
+        p:          project,
+        t:          type,
+        dis:        parsePct(r[3]) * 100,   // store as number e.g. 8.25
+        insN:       parseInt(r[4]) || 0,
+        maint:      parsePct(r[5]),
+        maintDate:  r[6] ? r[6].trim() : '',
+        opsFees:    parsePct(r[7]),
+        dp1:        parsePct(r[8]),
+        dp2:        parsePct(r[9]),
+        dp1d:       r[10] ? r[10].trim() : '',
+        dp2d:       r[11] ? r[11].trim() : '',
+        insPct:     parsePct(r[15]),
+        adminFees:  parsePct(r[17]),
+        yearFrom:   getYearFrom(project, type),
+      });
+    }
+
+    if (SHEET.length === 0) throw new Error('No data found');
+
+    // Populate project dropdown
+    const projects = [...new Set(SHEET.map(r => r.p))];
+    const selP = document.getElementById('project');
+    selP.innerHTML = '<option value="" disabled selected>Select a project</option>';
+    projects.forEach(p => { const o = document.createElement('option'); o.value = p; o.textContent = p; selP.appendChild(o); });
+    selP.disabled = false;
+    document.getElementById('confirm-btn').disabled = false;
+
+    statusEl.innerHTML = `<div class="status-msg" style="color:var(--success);">✓ Data loaded — ${SHEET.length} payment plans</div>`;
+    setTimeout(() => statusEl.innerHTML = '', 3000);
+
+  } catch (err) {
+    statusEl.innerHTML = `<div class="status-msg error">⚠ Could not load sheet: ${err.message}. Using cached data.</div>`;
+    loadFallback();
+  }
+}
+
+// ── FALLBACK DATA (last known good) ──
+function loadFallback() {
+  SHEET = [
+    {p:"Stoda",t:"10 Years",dis:0,    maint:0.08,maintDate:"01-Dec-26",opsFees:0.02,dp1:0.10, dp1d:"04-Jun-26",dp2:0.0501,dp2d:"04-Aug-26",insN:40,insPct:0.0210, adminFees:0.0099,yearFrom:"INS-1"},
+    {p:"Stoda",t:"7 Years", dis:10,   maint:0.08,maintDate:"01-Dec-26",opsFees:0.02,dp1:0.10, dp1d:"04-Jun-26",dp2:0.0501,dp2d:"04-Aug-26",insN:28,insPct:0.0300, adminFees:0.0099,yearFrom:"INS-1"},
+    {p:"Stoda",t:"6 Years", dis:15,   maint:0.08,maintDate:"01-Dec-26",opsFees:0.02,dp1:0.10, dp1d:"04-Jun-26",dp2:0.0501,dp2d:"04-Aug-26",insN:24,insPct:0.0350, adminFees:0.0099,yearFrom:"INS-1"},
+    {p:"Stoda",t:"1 Year",  dis:30,   maint:0.08,maintDate:"01-Dec-26",opsFees:0.02,dp1:0.25, dp1d:"04-Jun-26",dp2:0.25,  dp2d:"04-Sep-26",insN:2, insPct:0.2500, adminFees:0.0099,yearFrom:"DP-1"},
+    {p:"The Crest - Apartments",        t:"8 Years", dis:8.25, maint:0.08,maintDate:"01-Dec-29",opsFees:0,dp1:0.05,dp1d:"04-Jun-26",dp2:0.05,dp2d:"04-Sep-26",insN:31,insPct:0.02903,adminFees:0,yearFrom:"DP-2"},
+    {p:"The Crest - Apartments",        t:"10 Years",dis:0,    maint:0.08,maintDate:"01-Dec-29",opsFees:0,dp1:0.05,dp1d:"04-Jun-26",dp2:0.05,dp2d:"04-Sep-26",insN:39,insPct:0.02308,adminFees:0,yearFrom:"DP-2"},
+    {p:"The Crest - Apartments",        t:"6 Years", dis:16.25,maint:0.08,maintDate:"01-Dec-29",opsFees:0,dp1:0.05,dp1d:"04-Jun-26",dp2:0.05,dp2d:"04-Sep-26",insN:23,insPct:0.03913,adminFees:0,yearFrom:"DP-2"},
+    {p:"The Crest - Apartments",        t:"Cash",    dis:0,    maint:0.08,maintDate:"01-Dec-29",opsFees:0,dp1:1.00,dp1d:"04-Jun-26",dp2:0,   dp2d:"",         insN:0, insPct:0,      adminFees:0,yearFrom:"DP-2"},
+    {p:"The Crest - Villas 4Y Delivery",t:"8 Years", dis:8.25, maint:0.08,maintDate:"01-Dec-29",opsFees:0,dp1:0.05,dp1d:"04-Jun-26",dp2:0.05,dp2d:"04-Sep-26",insN:31,insPct:0.02903,adminFees:0,yearFrom:"DP-2"},
+    {p:"The Crest - Villas 4Y Delivery",t:"10 Years",dis:0,    maint:0.08,maintDate:"01-Dec-29",opsFees:0,dp1:0.05,dp1d:"04-Jun-26",dp2:0.05,dp2d:"04-Sep-26",insN:39,insPct:0.02308,adminFees:0,yearFrom:"DP-2"},
+    {p:"The Crest - Villas 4Y Delivery",t:"6 Years", dis:16.25,maint:0.08,maintDate:"01-Dec-29",opsFees:0,dp1:0.05,dp1d:"04-Jun-26",dp2:0.05,dp2d:"04-Sep-26",insN:23,insPct:0.03913,adminFees:0,yearFrom:"DP-2"},
+    {p:"The Crest - Villas 4Y Delivery",t:"Cash",    dis:0,    maint:0.08,maintDate:"01-Dec-29",opsFees:0,dp1:1.00,dp1d:"04-Jun-26",dp2:0,   dp2d:"",         insN:0, insPct:0,      adminFees:0,yearFrom:"DP-2"},
+    {p:"The Crest - Villas 2Y Delivery",t:"8 Years", dis:8.25, maint:0.08,maintDate:"01-Dec-27",opsFees:0,dp1:0.05,dp1d:"04-Jun-26",dp2:0.05,dp2d:"04-Sep-26",insN:31,insPct:0.02903,adminFees:0,yearFrom:"DP-2"},
+    {p:"The Crest - Villas 2Y Delivery",t:"10 Years",dis:0,    maint:0.08,maintDate:"01-Dec-27",opsFees:0,dp1:0.05,dp1d:"04-Jun-26",dp2:0.05,dp2d:"04-Sep-26",insN:39,insPct:0.02308,adminFees:0,yearFrom:"DP-2"},
+    {p:"The Crest - Villas 2Y Delivery",t:"6 Years", dis:16.25,maint:0.08,maintDate:"01-Dec-27",opsFees:0,dp1:0.05,dp1d:"04-Jun-26",dp2:0.05,dp2d:"04-Sep-26",insN:23,insPct:0.03913,adminFees:0,yearFrom:"DP-2"},
+    {p:"The Crest - Villas 2Y Delivery",t:"Cash",    dis:0,    maint:0.08,maintDate:"01-Dec-27",opsFees:0,dp1:1.00,dp1d:"04-Jun-26",dp2:0,   dp2d:"",         insN:0, insPct:0,      adminFees:0,yearFrom:"DP-2"},
+    {p:"WestDays",t:"8 Years", dis:8.25, maint:0.08,maintDate:"01-Dec-29",opsFees:0,dp1:0.05,dp1d:"04-Jun-26",dp2:0.05,dp2d:"04-Sep-26",insN:31,insPct:0.02903,adminFees:0,yearFrom:"DP-2"},
+    {p:"WestDays",t:"10 Years",dis:0,    maint:0.08,maintDate:"01-Dec-29",opsFees:0,dp1:0.05,dp1d:"04-Jun-26",dp2:0.05,dp2d:"04-Sep-26",insN:39,insPct:0.02308,adminFees:0,yearFrom:"DP-2"},
+    {p:"WestDays",t:"6 Years", dis:16.25,maint:0.08,maintDate:"01-Dec-29",opsFees:0,dp1:0.05,dp1d:"04-Jun-26",dp2:0.05,dp2d:"04-Sep-26",insN:23,insPct:0.03913,adminFees:0,yearFrom:"DP-2"},
+    {p:"WestDays",t:"Cash",    dis:0,    maint:0.08,maintDate:"01-Dec-29",opsFees:0,dp1:1.00,dp1d:"04-Jun-26",dp2:0,   dp2d:"",         insN:0, insPct:0,      adminFees:0,yearFrom:"DP-2"},
+  ];
+  const projects = [...new Set(SHEET.map(r => r.p))];
+  const selP = document.getElementById('project');
+  selP.innerHTML = '<option value="" disabled selected>Select a project</option>';
+  projects.forEach(p => { const o = document.createElement('option'); o.value = p; o.textContent = p; selP.appendChild(o); });
+  selP.disabled = false;
+  document.getElementById('confirm-btn').disabled = false;
+}
+
+// ── FORM LOGIC ──
+function onProjectChange() {
+  const p = document.getElementById('project').value;
+  const selT = document.getElementById('payment');
+  selT.innerHTML = '<option value="" disabled selected>Select payment type</option>';
+  SHEET.filter(r => r.p === p).forEach(r => { const o = document.createElement('option'); o.value = r.t; o.textContent = r.t; selT.appendChild(o); });
+  selT.disabled = false;
+  CR = null;
+  document.getElementById('selling').value = '';
+  document.getElementById('badge').style.display = 'none';
+  document.getElementById('stoda-extra').classList.remove('show');
+  document.getElementById('s-admin-row').style.display = 'none';
+  document.getElementById('s-sched-row').style.display = 'none';
+  updateSummary();
+}
+
+function onPaymentChange() {
+  const p = document.getElementById('project').value, t = document.getElementById('payment').value;
+  CR = SHEET.find(r => r.p === p && r.t === t) || null;
+  const badge = document.getElementById('badge');
+  if (CR && CR.dis !== 0) {
+    badge.textContent = CR.dis > 0 ? `${CR.dis}% discount` : `${Math.abs(CR.dis)}% premium`;
+    badge.className = CR.dis > 0 ? 'disc' : 'prem';
+    badge.style.display = 'inline';
+  } else { badge.style.display = 'none'; }
+  document.getElementById('stoda-extra').classList.toggle('show', !!(CR && CR.adminFees > 0));
+  document.getElementById('s-admin-row').style.display = CR && CR.adminFees > 0 ? 'flex' : 'none';
+  document.getElementById('s-sched-row').style.display = CR && CR.adminFees > 0 ? 'flex' : 'none';
+  updatePrices();
+}
+
+function fmtN(n) { return n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+
+function updatePrices() {
+  const pr = parseFloat(document.getElementById('price').value);
+  if (!isNaN(pr) && CR) {
+    const s = pr * (1 - CR.dis / 100);
+    document.getElementById('selling').value = s.toFixed(2);
+    if (CR.adminFees > 0) {
+      const a = pr * CR.adminFees, st = s - a;
+      document.getElementById('admin-val').value = a.toFixed(2);
+      document.getElementById('sched-val').value = st.toFixed(2);
+    }
+  } else {
+    document.getElementById('selling').value = '';
+    document.getElementById('admin-val').value = '';
+    document.getElementById('sched-val').value = '';
+  }
+  updateSummary();
+}
+
+function updateSummary() {
+  const p = document.getElementById('project').value, t = document.getElementById('payment').value;
+  const pr = parseFloat(document.getElementById('price').value), sp = document.getElementById('selling').value;
+  const sum = document.getElementById('summary');
+  if (p || t || !isNaN(pr)) {
+    sum.style.display = 'block';
+    document.getElementById('s-proj').textContent = p || '—';
+    document.getElementById('s-type').textContent = t || '—';
+    document.getElementById('s-sys').textContent = !isNaN(pr) ? '$' + fmtN(pr) : '—';
+    document.getElementById('s-sell').textContent = sp ? '$' + fmtN(parseFloat(sp)) : '—';
+    if (CR && CR.adminFees > 0) {
+      const av = document.getElementById('admin-val').value, sv = document.getElementById('sched-val').value;
+      document.getElementById('s-admin').textContent = av ? '$' + fmtN(parseFloat(av)) : '—';
+      document.getElementById('s-sched').textContent = sv ? '$' + fmtN(parseFloat(sv)) : '—';
+    }
+  } else { sum.style.display = 'none'; }
+}
+
+function getOrderData() {
+  const p = document.getElementById('project').value, t = document.getElementById('payment').value;
+  const pr = parseFloat(document.getElementById('price').value), sp = parseFloat(document.getElementById('selling').value);
+  if (!p || !t || isNaN(pr) || pr <= 0) return null;
+  const r = CR;
+  const adminAmt = r.adminFees > 0 ? Math.round(pr * r.adminFees) : 0;
+  const schedTotal = sp - adminAmt;
+  return { project: p, type: t, systemPrice: pr, sellingPrice: sp, adminAmt, schedTotal, r };
+}
+
+function handleConfirm() {
+  const d = getOrderData();
+  if (!d) { alert('Please fill in all fields.'); return; }
+  showPdfPreview(d);
+}
+
+// ── HELPERS ──
+const MO = { Jan:1,Feb:2,Mar:3,Apr:4,May:5,Jun:6,Jul:7,Aug:8,Sep:9,Oct:10,Nov:11,Dec:12 };
+const MN = ['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+function addQtrs(s, n) {
+  if (!s) return '';
+  const pts = s.split('-'); let d = parseInt(pts[0]), m = MO[pts[1]], y = 2000 + parseInt(pts[2]);
+  m += n * 3; while (m > 12) { m -= 12; y++; }
+  return `${String(d).padStart(2,'0')}-${MN[m]}-${String(y).slice(-2)}`;
+}
+function fmtP(n, base) { return ((n / base) * 100).toFixed(3) + '%'; }
+
+function buildSchedule(d) {
+  const { systemPrice, sellingPrice, adminAmt, schedTotal, r } = d;
+  const isStoda = r.adminFees > 0;
+  const base = isStoda ? schedTotal : sellingPrice;
+  const dp1Amt = Math.round(base * r.dp1);
+  const dp2Amt = Math.round(base * r.dp2);
+  const insAmt = Math.round(base * r.insPct);
+  const insN = r.insN;
+  const allocated = dp1Amt + dp2Amt + insAmt * insN;
+  const lastAmt = insAmt + (Math.round(base) - allocated);
+  const maintAmt = Math.round(systemPrice * r.maint);
+  const opsAmt = r.opsFees > 0 ? Math.round(systemPrice * r.opsFees) : 0;
+  const rows = [];
+  rows.push({ desc: 'DP-1', pct: fmtP(dp1Amt, base), amt: dp1Amt, date: r.dp1d, active: true });
+  if (dp2Amt > 0) rows.push({ desc: 'DP-2', pct: fmtP(dp2Amt, base), amt: dp2Amt, date: r.dp2d, active: true });
+  for (let i = 1; i <= insN; i++) {
+    const a = i === insN ? lastAmt : insAmt;
+    rows.push({ desc: `INS-${i}`, pct: fmtP(a, base), amt: a, date: addQtrs(r.dp2d || r.dp1d, i), active: true });
+  }
+  return { rows, maintAmt, opsAmt, base, isStoda, adminAmt, r, systemPrice };
+}
+
+function buildPdfHtml(d) {
+  const s = buildSchedule(d);
+  const r = d.r;
+  const isStoda = s.isStoda;
+  const totalPct = isStoda ? '99.01%' : '100.00%';
+  const yearFrom = r.yearFrom || 'DP-2';
+  const yearStartIdx = yearFrom === 'DP-1' ? 0 : yearFrom === 'DP-2' ? 1 : 2;
+
+  let schedRows = '';
+  s.rows.forEach((row, i) => {
+    const even = i % 2 === 0 ? '' : ' class="ph-even"';
+    const pos = i - yearStartIdx;
+    let yearCellHtml = '';
+    if (pos < 0) {
+      yearCellHtml = '<td></td>';
+    } else {
+      if (pos % 4 === 0) {
+        const yr = Math.floor(pos / 4) + 1;
+        const span = Math.min(4, s.rows.length - i);
+        yearCellHtml = `<td class="ph-yc" rowspan="${span}">Year ${yr}</td>`;
+      }
+    }
+    schedRows += `<tr${even}><td>${row.pct}</td><td>${fmtN(row.amt)}</td><td></td><td></td><td>${row.desc}</td><td>${row.date}</td>${yearCellHtml}</tr>`;
+  });
+
+  const adminBlock = isStoda ? `
+<div class="ph-gap"></div>
+<table class="ph-sub">
+  <colgroup><col style="width:9%"><col style="width:15%"><col style="width:13%"><col style="width:13%"><col style="width:25%"><col style="width:25%"></colgroup>
+  <thead><tr><th>النسبة</th><th>القسط</th><th>البنك</th><th>رقم الشيك</th><th colspan="2">مصاريف تامين</th></tr></thead>
+  <tbody><tr><td>${(r.adminFees*100).toFixed(2)}%</td><td>${fmtN(s.adminAmt)}</td><td></td><td></td><td>مصاريف اداريه</td><td>${r.dp2d}</td></tr></tbody>
+</table>` : '';
+
+  return `<div class="ph-wrap">
+<div class="ph-header"><div class="ph-brand">IL CAZAR<br>DEVELOPMENTS</div><div class="ph-title">${d.type} Payment Plan</div><div></div></div>
+<div class="ph-info">
+  <div class="ph-info-row ph-info-row-full"><div class="ph-info-cell" style="border-left:none;"><span class="ph-info-lbl">أسم العميل :</span><span class="ph-info-val"></span></div></div>
+  <div class="ph-info-row ph-info-row-3">
+    <div class="ph-info-cell"><span class="ph-info-lbl">المشروع :</span><span class="ph-info-val">${d.project}</span></div>
+    <div class="ph-info-cell"><span class="ph-info-lbl">المبني :</span><span class="ph-info-val"></span></div>
+    <div class="ph-info-cell"><span class="ph-info-lbl">سعر الوحدة :</span><span class="ph-info-val">${fmtN(d.systemPrice)}</span></div>
+  </div>
+  <div class="ph-info-row ph-info-row-3">
+    <div class="ph-info-cell"><span class="ph-info-lbl">رقم الوحدة :</span><span class="ph-info-val"></span></div>
+    <div class="ph-info-cell"><span class="ph-info-lbl">مساحة الوحدة :</span><span class="ph-info-val"></span></div>
+    <div class="ph-info-cell"><span class="ph-info-lbl">وديعة الصيانة :</span><span class="ph-info-val">${fmtN(s.maintAmt)}</span></div>
+  </div>
+  <div class="ph-info-row ph-info-row-3">
+    <div class="ph-info-cell"><span class="ph-info-lbl">نوع الوحدة :</span><span class="ph-info-val"></span></div>
+    <div class="ph-info-cell"><span class="ph-info-lbl">الدور :</span><span class="ph-info-val"></span></div>
+    <div class="ph-info-cell"><span class="ph-info-lbl">خطة السداد :</span><span class="ph-info-val">${d.type}</span></div>
+  </div>
+</div>
+<div class="ph-gap"></div>
+<table class="ph-table">
+  <colgroup><col style="width:9%"><col style="width:15%"><col style="width:13%"><col style="width:13%"><col style="width:11%"><col style="width:16%"><col style="width:14%"></colgroup>
+  <thead><tr><th>النسبة</th><th>القسط</th><th>البنك</th><th>رقم الشيك</th><th>الوصف</th><th>التاريخ</th><th></th></tr></thead>
+  <tbody>
+    ${schedRows}
+    <tr class="ph-tot"><td>${totalPct}</td><td>${fmtN(Math.round(s.base))}</td><td></td><td></td><td>الإجمالي</td><td colspan="2"></td></tr>
+  </tbody>
+</table>
+${adminBlock}
+<div class="ph-gap"></div>
+<table class="ph-sub">
+  <colgroup><col style="width:9%"><col style="width:15%"><col style="width:13%"><col style="width:13%"><col style="width:25%"><col style="width:25%"></colgroup>
+  <thead><tr><th>النسبة</th><th>القسط</th><th>البنك</th><th>رقم الشيك</th><th colspan="2">وديعة الصيانة</th></tr></thead>
+  <tbody>
+    <tr><td>${(r.maint*100).toFixed(2)}%</td><td>${fmtN(s.maintAmt)}</td><td></td><td></td><td>القسط الأول</td><td>${r.maintDate}</td></tr>
+    ${r.opsFees > 0 ? `<tr class="ph-even"><td>${(r.opsFees*100).toFixed(2)}%</td><td>${fmtN(s.opsAmt)}</td><td></td><td></td><td>مصاريف تتطوير</td><td>${r.maintDate}</td></tr>` : ''}
+  </tbody>
+</table>
+<div class="ph-sig"><span>طرف اول</span><span>طرف ثاني</span></div>
+</div>`;
+}
+
+function showPdfPreview(d) {
+  const html = buildPdfHtml(d);
+  document.getElementById('pdf-preview-content').innerHTML = html;
+  document.getElementById('print-area').innerHTML = html;
+  document.getElementById('pdf-preview').classList.add('show');
+  document.getElementById('pdf-preview').scrollTop = 0;
+}
+function closePdfPreview() { document.getElementById('pdf-preview').classList.remove('show'); }
+function exportPDF() { const d = getOrderData(); if (!d) { alert('Please fill in all fields first.'); return; } showPdfPreview(d); }
+
+function exportExcel() {
+  const d = getOrderData(); if (!d) { alert('Please fill in all fields first.'); return; }
+  const s = buildSchedule(d);
+  const wb = XLSX.utils.book_new(), ws = [];
+  ws.push([`${d.type} Payment Plan — IL CAZAR`]); ws.push([]);
+  ws.push(['Project', d.project, 'System price', fmtN(d.systemPrice)]);
+  ws.push(['Payment', d.type, 'Selling price', fmtN(d.sellingPrice)]);
+  ws.push(['Maintenance', '', fmtN(s.maintAmt)]);
+  if (s.isStoda) { ws.push(['Admin fees (0.99%)', '', fmtN(d.adminAmt)]); ws.push(['Schedule total', '', fmtN(Math.round(d.schedTotal))]); }
+  ws.push([]); ws.push(['النسبة','القسط','البنك','رقم الشيك','الوصف','التاريخ','Year']);
+  const yearFrom = d.r.yearFrom || 'DP-2';
+  const yearStartIdx = yearFrom === 'DP-1' ? 0 : yearFrom === 'DP-2' ? 1 : 2;
+  s.rows.forEach((row, i) => {
+    const pos = i - yearStartIdx;
+    const yr = pos >= 0 ? `Year ${Math.floor(pos / 4) + 1}` : '';
+    ws.push([row.pct, row.amt, '', '', row.desc, row.date, yr]);
+  });
+  ws.push([s.isStoda ? '99.01%' : '100.00%', Math.round(s.base), '', '', 'الإجمالي', '', '']); ws.push([]);
+  if (s.isStoda) { ws.push(['مصاريف تامين']); ws.push(['النسبة','القسط','البنك','رقم الشيك','الوصف','التاريخ']); ws.push([(d.r.adminFees*100).toFixed(2)+'%', d.adminAmt, '', '', 'مصاريف اداريه', d.r.dp2d]); ws.push([]); }
+  ws.push(['وديعة الصيانة']); ws.push(['النسبة','القسط','البنك','رقم الشيك','الوصف','التاريخ']);
+  ws.push([(d.r.maint*100).toFixed(2)+'%', s.maintAmt, '', '', 'القسط الأول', d.r.maintDate]);
+  if (d.r.opsFees > 0) ws.push([(d.r.opsFees*100).toFixed(2)+'%', s.opsAmt, '', '', 'مصاريف تتطوير', d.r.maintDate]);
+  ws.push([]); ws.push(['طرف اول', '', '', '', 'طرف ثاني']);
+  const sheet = XLSX.utils.aoa_to_sheet(ws);
+  sheet['!cols'] = [{wch:12},{wch:16},{wch:14},{wch:14},{wch:14},{wch:14},{wch:8}];
+  XLSX.utils.book_append_sheet(wb, sheet, 'Payment Schedule');
+  XLSX.writeFile(wb, `${d.project}_${d.type}_payment_schedule.xlsx`);
+}
+
+// ── INIT ──
+loadSheet();
+</script>
+</body>
+</html>
