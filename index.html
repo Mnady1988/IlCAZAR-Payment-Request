@@ -400,9 +400,11 @@ function buildSchedule(d) {
   const rows = [];
   rows.push({ desc: 'DP-1', pct: fmtP(dp1Amt, base), amt: dp1Amt, date: r.dp1d, active: true });
   if (dp2Amt > 0) rows.push({ desc: 'DP-2', pct: fmtP(dp2Amt, base), amt: dp2Amt, date: r.dp2d, active: true });
-  for (let i = 1; i <= insN; i++) {
-    const a = i === insN ? lastAmt : insAmt;
-    rows.push({ desc: `INS-${i}`, pct: fmtP(a, base), amt: a, date: addQtrs(r.dp2d || r.dp1d, i), active: true });
+  if (insN > 0 && r.insPct > 0) {
+    for (let i = 1; i <= insN; i++) {
+      const a = i === insN ? lastAmt : insAmt;
+      rows.push({ desc: `INS-${i}`, pct: fmtP(a, base), amt: a, date: addQtrs(r.dp2d || r.dp1d, i), active: true });
+    }
   }
   return { rows, maintAmt, opsAmt, base, isStoda, adminAmt, r, systemPrice };
 }
