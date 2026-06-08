@@ -329,7 +329,7 @@ function updatePrices() {
     const s = pr * (1 - CR.dis / 100);
     document.getElementById('selling').value = s.toFixed(2);
     if (CR.adminFees > 0) {
-      const a = pr * CR.adminFees, st = s - a;
+      const a = Math.round(pr * CR.adminFees), st = Math.round(s - a);
       document.getElementById('admin-val').value = a.toFixed(2);
       document.getElementById('sched-val').value = st.toFixed(2);
     }
