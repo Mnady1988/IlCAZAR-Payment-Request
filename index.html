@@ -191,9 +191,10 @@ function parsePct(s) {
 }
 
 // ── DETERMINE yearFrom based on project/type ──
-function getYearFrom(project, type) {
+function getYearFrom(project, type, dp2) {
   if (project === 'Stoda' && type === '1 Year') return 'DP-1';
   if (project === 'Stoda') return 'INS-1';
+  if (!dp2 || dp2 === 0) return 'DP-1'; // no DP-2
   return 'DP-2'; // all others
 }
 
@@ -234,7 +235,7 @@ async function loadSheet() {
         dp2d:       r[11] ? r[11].trim() : '',
         insPct:     parsePct(r[15]),
         adminFees:  parsePct(r[17]),
-        yearFrom:   getYearFrom(project, type),
+        yearFrom:   getYearFrom(project, type, parsePct(r[9])),
       });
     }
 
@@ -403,7 +404,8 @@ function buildSchedule(d) {
   if (insN > 0 && r.insPct > 0) {
     for (let i = 1; i <= insN; i++) {
       const a = i === insN ? lastAmt : insAmt;
-      rows.push({ desc: `INS-${i}`, pct: fmtP(a, base), amt: a, date: addQtrs(r.dp2d || r.dp1d, i), active: true });
+      const insOffset = (r.dp2 === 0) ? i - 1 : i;
+      rows.push({ desc: `INS-${i}`, pct: fmtP(a, base), amt: a, date: addQtrs(r.dp2d || r.dp1d, insOffset), active: true });
     }
   }
   return { rows, maintAmt, opsAmt, base, isStoda, adminAmt, r, systemPrice };
