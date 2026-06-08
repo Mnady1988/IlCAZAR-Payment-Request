@@ -235,6 +235,7 @@ async function loadSheet() {
         dp2d:       r[11] ? r[11].trim() : '',
         insPct:     parsePct(r[15]),
         adminFees:  parsePct(r[17]),
+        adminFeesDate: r[18] ? r[18].trim() : '',
         yearFrom:   getYearFrom(project, type, parsePct(r[9])),
       });
     }
@@ -329,7 +330,7 @@ function updatePrices() {
     const s = pr * (1 - CR.dis / 100);
     document.getElementById('selling').value = s.toFixed(2);
     if (CR.adminFees > 0) {
-      const a = Math.round(pr * CR.adminFees), st = Math.round(s - a);
+      const a = Math.round((pr * CR.adminFees) + Number.EPSILON), st = Math.round(s - a);
       document.getElementById('admin-val').value = a.toFixed(2);
       document.getElementById('sched-val').value = st.toFixed(2);
     }
@@ -364,7 +365,7 @@ function getOrderData() {
   const pr = parseFloat(document.getElementById('price').value), sp = parseFloat(document.getElementById('selling').value);
   if (!p || !t || isNaN(pr) || pr <= 0) return null;
   const r = CR;
-  const adminAmt = r.adminFees > 0 ? Math.round(pr * r.adminFees) : 0;
+  const adminAmt = r.adminFees > 0 ? Math.round(pr * r.adminFees * 100 + 0.5) / 100 * 100 | 0 : 0;
   const schedTotal = sp - adminAmt;
   return { project: p, type: t, systemPrice: pr, sellingPrice: sp, adminAmt, schedTotal, r };
 }
@@ -441,7 +442,7 @@ function buildPdfHtml(d) {
 <table class="ph-sub">
   <colgroup><col style="width:9%"><col style="width:15%"><col style="width:13%"><col style="width:13%"><col style="width:25%"><col style="width:25%"></colgroup>
   <thead><tr><th>النسبة</th><th>القسط</th><th>البنك</th><th>رقم الشيك</th><th colspan="2">مصاريف تامين</th></tr></thead>
-  <tbody><tr><td>${(r.adminFees*100).toFixed(2)}%</td><td>${fmtN(s.adminAmt)}</td><td></td><td></td><td>مصاريف اداريه</td><td>${r.dp2d}</td></tr></tbody>
+  <tbody><tr><td>${(r.adminFees*100).toFixed(2)}%</td><td>${fmtN(s.adminAmt)}</td><td></td><td></td><td>مصاريف اداريه</td><td>${r.adminFeesDate || r.dp2d}</td></tr></tbody>
 </table>` : '';
 
   return `<div class="ph-wrap">
@@ -515,7 +516,7 @@ function exportExcel() {
     ws.push([row.pct, row.amt, '', '', row.desc, row.date, yr]);
   });
   ws.push([s.isStoda ? '99.01%' : '100.00%', Math.round(s.base), '', '', 'الإجمالي', '', '']); ws.push([]);
-  if (s.isStoda) { ws.push(['مصاريف تامين']); ws.push(['النسبة','القسط','البنك','رقم الشيك','الوصف','التاريخ']); ws.push([(d.r.adminFees*100).toFixed(2)+'%', d.adminAmt, '', '', 'مصاريف اداريه', d.r.dp2d]); ws.push([]); }
+  if (s.isStoda) { ws.push(['مصاريف تامين']); ws.push(['النسبة','القسط','البنك','رقم الشيك','الوصف','التاريخ']); ws.push([(d.r.adminFees*100).toFixed(2)+'%', d.adminAmt, '', '', 'مصاريف اداريه', d.r.adminFeesDate || d.r.dp2d]); ws.push([]); }
   ws.push(['وديعة الصيانة']); ws.push(['النسبة','القسط','البنك','رقم الشيك','الوصف','التاريخ']);
   ws.push([(d.r.maint*100).toFixed(2)+'%', s.maintAmt, '', '', 'القسط الأول', d.r.maintDate]);
   if (d.r.opsFees > 0) ws.push([(d.r.opsFees*100).toFixed(2)+'%', s.opsAmt, '', '', 'مصاريف تتطوير', d.r.maintDate]);
