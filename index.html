@@ -420,61 +420,48 @@ function buildPdfHtml(d) {
   const isStoda = s.isStoda;
   const totalPct = isStoda ? '99.01%' : '100.00%';
   const yearFrom = r.yearFrom || 'DP-2';
+  // yearStartIdx: index in rows array where year counting starts
+  // INS-1 → find INS-1 index; DP-2 → find DP-2 index; DP-1 → 0
+  const yearStartIdx = (() => {
+    if (yearFrom === 'INS-1') return s.rows.findIndex(r => r.desc === 'INS-1');
+    if (yearFrom === 'DP-2')  return s.rows.findIndex(r => r.desc === 'DP-2');
+    return 0; // DP-1
+  })();
 
-  // INS rows only — find where INS-1 starts
-  const insStartIdx = s.rows.findIndex(r => r.desc === 'INS-1');
-
-  // yearLabelStartIdx: which row gets the FIRST year label cell
-  // DP-1 → label starts at DP-1 (insStartIdx - 2 or 0)
-  // DP-2 → label starts at DP-2 (insStartIdx - 1)
-  // INS-1 → label starts at INS-1
-  let yearLabelStartIdx;
-  if (yearFrom === 'DP-1') yearLabelStartIdx = 0;
-  else if (yearFrom === 'DP-2') yearLabelStartIdx = insStartIdx > 0 ? insStartIdx - 1 : 0;
-  else yearLabelStartIdx = insStartIdx; // INS-1
-
-  // For grouping: always count 4 INS per year
-  // pos = how many INS rows have passed since INS-1
+  // insCountFromYearStart: count of INS rows from yearStart onward
+  // Each group of 4 INS rows = 1 year
+  let insCountSoFar = 0;
   let schedRows = '';
-  let insCount = 0; // count INS rows seen so far
   s.rows.forEach((row, i) => {
     const even = i % 2 === 0 ? '' : ' class="ph-even"';
     const isIns = row.desc.startsWith('INS-');
     let yearCellHtml = '';
 
-    if (i < yearLabelStartIdx) {
-      // before year grouping starts — no year cell
+    if (yearStartIdx === -1 || i < yearStartIdx) {
+      // before year start — empty cell
       yearCellHtml = '<td></td>';
-    } else if (i === yearLabelStartIdx) {
-      // first year cell — Year 1 starts here
-      // span = rows until end of Year 1 group
-      // Year 1 includes: yearLabelStartIdx row + next rows until 4 INS are covered
-      let span = 0;
-      let insInGroup = 0;
+    } else if (i === yearStartIdx) {
+      // first year label always here — Year 1
+      // span = 4 INS rows (+ non-INS rows that come before INS-1 if yearFrom=DP-2)
+      let span = 0, insInGroup = 0;
       for (let j = i; j < s.rows.length && insInGroup < 4; j++) {
         span++;
         if (s.rows[j].desc.startsWith('INS-')) insInGroup++;
       }
       yearCellHtml = `<td class="ph-yc" rowspan="${span}">Year 1</td>`;
-    } else if (isIns) {
-      // for subsequent INS rows, check if this starts a new year group
-      // insCount was incremented before this check
-      if (insCount > 0 && insCount % 4 === 0) {
-        const yr = Math.floor(insCount / 4) + 1;
-        let span = 0;
-        let insInGroup = 0;
-        for (let j = i; j < s.rows.length && insInGroup < 4; j++) {
-          span++;
-          if (s.rows[j].desc.startsWith('INS-')) insInGroup++;
-        }
-        yearCellHtml = `<td class="ph-yc" rowspan="${span}">Year ${yr}</td>`;
+    } else if (isIns && insCountSoFar > 0 && insCountSoFar % 4 === 0) {
+      // new year group starts — every 4 INS rows
+      const yr = Math.floor(insCountSoFar / 4) + 1;
+      let span = 0, insInGroup = 0;
+      for (let j = i; j < s.rows.length && insInGroup < 4; j++) {
+        span++;
+        if (s.rows[j].desc.startsWith('INS-')) insInGroup++;
       }
-      // else: covered by rowspan
-    } else {
-      // DP rows that are after yearLabelStartIdx but before INS — no cell (covered by rowspan)
+      yearCellHtml = `<td class="ph-yc" rowspan="${span}">Year ${yr}</td>`;
     }
+    // else: covered by rowspan — emit no cell
 
-    if (isIns) insCount++;
+    if (isIns && i >= yearStartIdx) insCountSoFar++;
 
     schedRows += `<tr${even}><td>${row.pct}</td><td>${fmtN(row.amt)}</td><td></td><td></td><td>${row.desc}</td><td>${row.date}</td>${yearCellHtml}</tr>`;
   });
