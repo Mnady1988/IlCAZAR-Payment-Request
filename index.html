@@ -366,7 +366,8 @@ function getOrderData() {
   if (!p || !t || isNaN(pr) || pr <= 0) return null;
   const r = CR;
   const adminAmt = r.adminFees > 0 ? Math.round(pr * r.adminFees) : 0;
-  const schedTotal = sp - adminAmt;
+  const sellingRounded = Math.round(pr * (1 - r.dis / 100));
+  const schedTotal = sellingRounded - adminAmt;
   return { project: p, type: t, systemPrice: pr, sellingPrice: sp, adminAmt, schedTotal, r };
 }
 
