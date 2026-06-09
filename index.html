@@ -331,7 +331,7 @@ function updatePrices() {
     const s = pr * (1 - CR.dis / 100);
     document.getElementById('selling').value = s.toFixed(2);
     if (CR.adminFees > 0) {
-      const a = Math.round((pr * CR.adminFees) + Number.EPSILON), st = Math.round(s - a);
+      const a = Math.round((s * CR.adminFees) + Number.EPSILON), st = Math.round(s - a);
       document.getElementById('admin-val').value = a.toFixed(2);
       document.getElementById('sched-val').value = st.toFixed(2);
     }
@@ -366,7 +366,7 @@ function getOrderData() {
   const pr = parseFloat(document.getElementById('price').value), sp = parseFloat(document.getElementById('selling').value);
   if (!p || !t || isNaN(pr) || pr <= 0) return null;
   const r = CR;
-  const adminAmt = r.adminFees > 0 ? Math.round(pr * r.adminFees) : 0;
+  const adminAmt = r.adminFees > 0 ? Math.round(sp * r.adminFees) : 0;
   const sellingRounded = Math.round(pr * (1 - r.dis / 100));
   const schedTotal = sellingRounded - adminAmt;
   return { project: p, type: t, systemPrice: pr, sellingPrice: sp, adminAmt, schedTotal, r };
