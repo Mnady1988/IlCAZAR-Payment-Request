@@ -201,6 +201,15 @@ function getYearFrom(project, type, dp2, dp3) {
   return 'DP-2';
 }
 
+// ── PROJECT LIST (Park Sight pinned first) ──
+const PINNED_PROJECTS = ['Park Sight - Standard', 'Park Sight - Bullet'];
+function buildProjectList() {
+  const all = [...new Set(SHEET.map(r => r.p))];
+  const pinned = PINNED_PROJECTS.filter(p => all.includes(p));
+  const rest   = all.filter(p => !PINNED_PROJECTS.includes(p));
+  return [...pinned, ...rest];
+}
+
 // ── LOAD SHEET DATA ──
 async function loadSheet() {
   const statusEl = document.getElementById('sheet-status');
@@ -253,8 +262,8 @@ async function loadSheet() {
 
     if (SHEET.length === 0) throw new Error('No data found');
 
-    // Populate project dropdown
-    const projects = [...new Set(SHEET.map(r => r.p))];
+    // Populate project dropdown (Park Sight pinned to top)
+    const projects = buildProjectList();
     const selP = document.getElementById('project');
     selP.innerHTML = '<option value="" disabled selected>Select a project</option>';
     projects.forEach(p => { const o = document.createElement('option'); o.value = p; o.textContent = p; selP.appendChild(o); });
@@ -316,7 +325,7 @@ function loadFallback() {
     S("Park Sight - Bullet","8 Years", 8.25, 24,0.10,"01-Jun-29",0,0.025,0.025,0.025,0.025,"18-Jun-26","18-Jul-26","18-Sep-26","18-Oct-26",7,0.0771,0.0150,"18-Jan-27",0,"","INS-1"),
     S("Park Sight - Bullet","6 Years", 16.25,18,0.10,"01-Jun-29",0,0.025,0.025,0.025,0.025,"18-Jun-26","18-Jul-26","18-Sep-26","18-Oct-26",5,0.1260,0.0150,"18-Jan-27",0,"","INS-1"),
   ];
-  const projects = [...new Set(SHEET.map(r => r.p))];
+  const projects = buildProjectList();
   const selP = document.getElementById('project');
   selP.innerHTML = '<option value="" disabled selected>Select a project</option>';
   projects.forEach(p => { const o = document.createElement('option'); o.value = p; o.textContent = p; selP.appendChild(o); });
