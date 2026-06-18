@@ -78,19 +78,22 @@ input[readonly]{background:#f9f8f6;color:var(--text-2);cursor:default;}
 .ph-info-cell:last-child{border-left:none;}
 .ph-info-lbl{font-size:8px;color:#555;white-space:nowrap;font-weight:bold;}
 .ph-info-val{font-size:9px;font-weight:bold;color:#000;flex:1;border-bottom:0.5px solid #ccc;min-height:12px;}
-.ph-table,.ph-sub{width:100%;border-collapse:collapse;font-size:9px;table-layout:fixed;}
-.ph-table th,.ph-sub th{background:#d9d9d9;padding:3px 4px;text-align:center;font-weight:bold;border:0.5px solid #999;}
-.ph-table td,.ph-sub td{padding:2px 4px;border:0.5px solid #ccc;text-align:center;}
+.ph-table,.ph-sub{width:100%;border-collapse:collapse;font-size:8.5px;table-layout:fixed;}
+.ph-table th,.ph-sub th{background:#d9d9d9;padding:2px 3px;text-align:center;font-weight:bold;border:0.5px solid #999;}
+.ph-table td,.ph-sub td{padding:1.5px 3px;border:0.5px solid #ccc;text-align:center;}
 .ph-even td{background:#f8f8f8;}
 .ph-tot td{background:#d9d9d9;font-weight:bold;}
 .ph-yc{background:#f2f2f2;font-weight:bold;vertical-align:middle;}
-.ph-gap{height:5px;}
-.ph-sig{display:flex;justify-content:space-between;padding-top:8px;font-size:10px;font-weight:bold;}
+.ph-gap{height:3px;}
+.ph-info-cell{display:flex;align-items:center;gap:5px;padding:3px 6px;border-left:0.5px solid #999;}
+.ph-info-val{font-size:8.5px;font-weight:bold;color:#000;flex:1;border-bottom:0.5px solid #ccc;min-height:10px;}
+.ph-sig{display:flex;justify-content:space-between;direction:rtl;padding-top:6px;font-size:9.5px;font-weight:bold;}
 #print-area{display:none;}
 @media print{
-  @page{size:A4 portrait;margin:7mm 8mm;}
+  @page{size:A4 portrait;margin:5mm 7mm;}
   body>*{display:none!important;}
   #print-area{display:block!important;}
+  .ph-wrap{zoom:0.9;}
   .ph-header,.ph-table th,.ph-sub th,.ph-even td,.ph-tot td,.ph-yc{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
 }
 </style>
@@ -591,7 +594,9 @@ ${adminBlock}
     ${r.opsFees > 0 ? `<tr class="ph-even"><td>${(r.opsFees*100).toFixed(2)}%</td><td>${fmtN(s.opsAmt)}</td><td></td><td></td><td>مصاريف تتطوير</td><td>${r.maintDate}</td></tr>` : ''}
   </tbody>
 </table>
-<div class="ph-sig"><span>طرف اول</span><span>طرف ثاني</span></div>
+${isStoda
+  ? `<div class="ph-sig"><span>طرف اول</span><span>طرف ثاني</span><span>طرف ثالث</span></div>`
+  : `<div class="ph-sig"><span>طرف اول</span><span>طرف ثاني</span></div>`}
 </div>`;
 }
 
