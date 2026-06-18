@@ -364,17 +364,17 @@ function onPaymentChange() {
   updatePrices();
 }
 
-function fmtN(n) { return n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+function fmtN(n) { return Math.round(n).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 }); }
 
 function updatePrices() {
   const pr = parseFloat(document.getElementById('price').value);
   if (!isNaN(pr) && CR) {
-    const s = pr * (1 - CR.dis / 100);
-    document.getElementById('selling').value = s.toFixed(2);
+    const s = Math.round(pr * (1 - CR.dis / 100));
+    document.getElementById('selling').value = s;
     if (CR.adminFees > 0) {
-      const a = Math.round((s * CR.adminFees) + Number.EPSILON), st = Math.round(s - a);
-      document.getElementById('admin-val').value = a.toFixed(2);
-      document.getElementById('sched-val').value = st.toFixed(2);
+      const a = Math.round(s * CR.adminFees), st = s - a;
+      document.getElementById('admin-val').value = a;
+      document.getElementById('sched-val').value = st;
     }
   } else {
     document.getElementById('selling').value = '';
