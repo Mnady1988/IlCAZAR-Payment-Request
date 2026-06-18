@@ -231,7 +231,9 @@ async function loadSheet() {
       if (!r[0] || !r[1] || r[0].trim() === '') break; // stop at empty project
       const project = r[0].trim();
       const type    = r[1].trim();
+      const status  = r[22] ? r[22].trim().toLowerCase() : '';
       if (!project || !type) continue;
+      if (status !== 'active') continue; // skip In-Active rows
 
       const dp2v = parsePct(r[8]), dp3v = parsePct(r[9]);
       SHEET.push({
@@ -270,8 +272,7 @@ async function loadSheet() {
     selP.disabled = false;
     document.getElementById('confirm-btn').disabled = false;
 
-    statusEl.innerHTML = `<div class="status-msg" style="color:var(--success);">✓ Data loaded — ${SHEET.length} payment plans</div>`;
-    setTimeout(() => statusEl.innerHTML = '', 3000);
+    statusEl.innerHTML = `<div class="status-msg" style="color:var(--success);display:flex;align-items:center;justify-content:center;gap:8px;">✓ ${SHEET.length} active plans <button onclick="loadSheet()" style="font-size:11px;padding:2px 8px;border:1px solid var(--border);border-radius:4px;background:var(--card);cursor:pointer;color:var(--text-2);">↻ Refresh</button></div>`;
 
   } catch (err) {
     statusEl.innerHTML = `<div class="status-msg error">⚠ Could not load sheet: ${err.message}. Using cached data.</div>`;
