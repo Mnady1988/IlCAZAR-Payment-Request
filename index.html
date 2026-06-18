@@ -93,6 +93,25 @@ input[readonly]{background:#f9f8f6;color:var(--text-2);cursor:default;}
   #print-area{display:block!important;}
   .ph-header,.ph-table th,.ph-sub th,.ph-even td,.ph-tot td,.ph-yc{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
 }
+/* ── Mobile ── */
+@media(max-width:600px){
+  body{padding:20px 12px;}
+  .logo{margin-bottom:20px;}
+  .card-header{padding:18px 16px 14px;}
+  .card-header h1{font-size:19px;}
+  .card-body{padding:16px;gap:14px;}
+  .export-row{grid-template-columns:1fr;}
+  /* PDF preview: shrink the A4 sheet to fit screen */
+  #pdf-preview{padding:0;}
+  #pdf-preview>div{width:100%;display:flex;flex-direction:column;}
+  .pdf-close-bar{position:sticky;top:0;z-index:10;background:rgba(255,255,255,.95);padding:10px 12px;margin-bottom:0;border-bottom:1px solid #e0e0e0;backdrop-filter:blur(4px);}
+  .pdf-preview-inner{
+    width:210mm;
+    transform-origin:top left;
+    transform:scale(var(--pdf-scale,0.44));
+    margin-bottom:calc((297mm * var(--pdf-scale,0.44)) - 297mm);
+  }
+}
 </style>
 </head>
 <body>
@@ -364,17 +383,17 @@ function onPaymentChange() {
   updatePrices();
 }
 
-function fmtN(n) { return n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+function fmtN(n) { return Math.round(n).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 }); }
 
 function updatePrices() {
   const pr = parseFloat(document.getElementById('price').value);
   if (!isNaN(pr) && CR) {
-    const s = pr * (1 - CR.dis / 100);
-    document.getElementById('selling').value = s.toFixed(2);
+    const s = Math.round(pr * (1 - CR.dis / 100));
+    document.getElementById('selling').value = s;
     if (CR.adminFees > 0) {
-      const a = Math.round((s * CR.adminFees) + Number.EPSILON), st = Math.round(s - a);
-      document.getElementById('admin-val').value = a.toFixed(2);
-      document.getElementById('sched-val').value = st.toFixed(2);
+      const a = Math.round(s * CR.adminFees), st = s - a;
+      document.getElementById('admin-val').value = a;
+      document.getElementById('sched-val').value = st;
     }
   } else {
     document.getElementById('selling').value = '';
@@ -595,6 +614,12 @@ function showPdfPreview(d) {
   const html = buildPdfHtml(d);
   document.getElementById('pdf-preview-content').innerHTML = html;
   document.getElementById('print-area').innerHTML = html;
+  // Set PDF scale for mobile: fit A4 width (794px) to screen width
+  if (window.innerWidth <= 600) {
+    const scale = Math.min((window.innerWidth) / 794, 1);
+    document.querySelector('.pdf-preview-inner').style.setProperty('--pdf-scale', scale);
+    document.documentElement.style.setProperty('--pdf-scale', scale);
+  }
   document.getElementById('pdf-preview').classList.add('show');
   document.getElementById('pdf-preview').scrollTop = 0;
 }
