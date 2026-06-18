@@ -436,17 +436,19 @@ function buildSchedule(d) {
   const { systemPrice, sellingPrice, adminAmt, schedTotal, r } = d;
   const isStoda = r.adminFees > 0;
   const base = isStoda ? schedTotal : Math.round(sellingPrice);
-  const dp1Amt    = r.dp1            > 0 ? Math.round(base * r.dp1)        : 0;
-  const dp2Amt    = r.dp2            > 0 ? Math.round(base * r.dp2)        : 0;
-  const dp3Amt    = (r.dp3 || 0)    > 0 ? Math.round(base * r.dp3)        : 0;
-  const dp4Amt    = (r.dp4 || 0)    > 0 ? Math.round(base * r.dp4)        : 0;
-  const insAmt    = Math.round(base * r.insPct);
-  const bulletAmt = (r.bulletPct || 0) > 0 ? Math.round(base * r.bulletPct) : 0;
+  const dp1Amt    = r.dp1           > 0 ? Math.round(base * r.dp1)            : 0;
+  const dp2Amt    = r.dp2           > 0 ? Math.round(base * r.dp2)            : 0;
+  const dp3Amt    = (r.dp3 || 0)   > 0 ? Math.round(base * r.dp3)            : 0;
+  const dp4Amt    = (r.dp4 || 0)   > 0 ? Math.round(base * r.dp4)            : 0;
+  const allocFixed = dp1Amt + dp2Amt + dp3Amt + dp4Amt;
   const insN      = r.insN;
   const bulletN   = r.bulletN || 0;
-  const allocFixed = dp1Amt + dp2Amt + dp3Amt + dp4Amt;
-  const allocVar   = insAmt * insN + bulletAmt * bulletN;
-  const lastAmt    = insAmt + (Math.round(base) - allocFixed - allocVar);
+  const bulletAmt = bulletN > 0 ? Math.round(base * (r.bulletPct || 0))       : 0;
+  // Distribute remaining balance equally across installments — avoids large rounding error
+  // from using the sheet's rounded insPct percentage directly
+  const insRemaining = base - allocFixed - bulletAmt * bulletN;
+  const insAmt       = insN > 0 && r.insPct > 0 ? Math.floor(insRemaining / insN) : 0;
+  const lastAmt      = insN > 0 && r.insPct > 0 ? insRemaining - insAmt * (insN - 1) : 0;
   const maintAmt   = Math.round(systemPrice * r.maint);
   const opsAmt     = r.opsFees > 0 ? Math.round(systemPrice * r.opsFees) : 0;
 
