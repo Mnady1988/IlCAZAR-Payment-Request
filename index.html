@@ -272,7 +272,8 @@ async function loadSheet() {
     selP.disabled = false;
     document.getElementById('confirm-btn').disabled = false;
 
-    statusEl.innerHTML = `<div class="status-msg" style="color:var(--success);display:flex;align-items:center;justify-content:center;gap:8px;">✓ ${SHEET.length} active plans <button onclick="loadSheet()" style="font-size:11px;padding:2px 8px;border:1px solid var(--border);border-radius:4px;background:var(--card);cursor:pointer;color:var(--text-2);">↻ Refresh</button></div>`;
+    statusEl.innerHTML = `<div class="status-msg" style="color:var(--success);">✓ Data loaded — ${SHEET.length} active plans</div>`;
+    setTimeout(() => statusEl.innerHTML = '', 3000);
 
   } catch (err) {
     statusEl.innerHTML = `<div class="status-msg error">⚠ Could not load sheet: ${err.message}. Using cached data.</div>`;
